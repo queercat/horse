@@ -22,13 +22,15 @@
           <li><a href="/signout" class="contrast">Signout</a></li>
         </ul>
       </nav>
-      @if self.error.len() > 0 {
+      <!--% data = "test" --><!--% -->
       <article class="article__card article__card-error">
         <i class="fa-solid fa-triangle-exclamation"></i>
-        <p>@self.error</p>
+        <p>%s</p>
       </article>
-      }
     </header>
-    <main class="container">@render_body</main>
+    <main class="container">
+      <!--% data = children -->
+      <!--% -->
+    </main>
   </body>
 </html>

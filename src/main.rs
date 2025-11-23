@@ -13,31 +13,10 @@ use rocket::State;
 use rocket::form::Form;
 use rocket::futures::lock::Mutex;
 use rocket::{fs::FileServer, response::content::RawHtml};
-use rshtml::traits::RsHtml;
 
 use crate::database::setup::set_up_db;
-use crate::models::pages::{HomePage, LoginPage, RegistrationPage};
 use crate::routes::get_routes;
 use crate::services::user_service::UserService;
-use crate::utilities::page::{Render, render};
-
-#[get("/register")]
-async fn register() -> RawHtml<String> {
-    let mut page = RegistrationPage {
-        error: "".to_string()
-    };
-
-    RawHtml(page.render().unwrap())
-}
-
-#[get("/login")]
-async fn login() -> RawHtml<String> {
-    let mut page = Box::new(LoginPage {
-        error: "".to_string()
-    }) as Box<dyn RsHtml + 'static>;
-
-    RawHtml(render(&mut page, None).unwrap())
-}
 
 #[post("/register", data = "<registration_request>")]
 async fn handle_register(
@@ -53,10 +32,7 @@ async fn handle_register(
         Err(s) => s
     };
 
-    let mut page = RegistrationPage {
-        error
-    };
-    RawHtml(page.render().unwrap())
+    RawHtml("".to_string())
 }
 
 #[post("/login", data = "<login_request>")]
@@ -65,12 +41,7 @@ async fn handle_login(
     login_request: Form<models::requests::LoginRequest<'_>>,
 ) -> RawHtml<String> {
     let result = user_service.login_user(login_request.username, login_request.password).await;
-
-    let mut page = Box::new(LoginPage {
-        error: if result { "true".to_string() } else { "false".to_string() }
-    }) as Box<dyn RsHtml + 'static>;
-
-    RawHtml(page.render(None).unwrap())
+    RawHtml("".to_string())
 }
 
 #[launch]
