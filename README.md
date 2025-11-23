@@ -1,4 +1,4 @@
-# TL;DR
+# 🐴🦀
 This is a WIP forum that doesn't use any JavaScript! And it shouldn't suck either. It uses SSR templates.
 
 # Goals
