@@ -24,55 +24,46 @@ struct Block {
     end: usize,
 }
 
-pub fn render(html: String, environment: Option<&HashMap<String, String>>) -> Result<String, String> {
-    let source_regex = Regex::new(r"<!--%(.+)-->").unwrap();
-    let captures: Vec<Captures> = source_regex.captures_iter(&html).collect();
+pub fn render(template: String, environment: Option<&HashMap<String, String>>) -> Result<String, String> {
+    let captures = get_captures(&template);
 
-    Ok(process(html.clone(), captures, environment)?)
+    match captures {
+        None => return Ok(template),
+        Some(captures) => {
+            let source = evaluate(&template, captures, environment)?;
+            return Ok(render(source, environment)?)
+        }
+    }
 }
 
-fn process(source: String, captures: Vec<Captures>, enviornment: Option<&HashMap<String, String>>) -> Result<String, String> {
+fn get_captures(source: &String) -> std::option::Option<regex::Captures<'_>> {
+    let source_regex = Regex::new(r"(?<start_token><!--%)|(?<end_token>%-->)").unwrap();
+    source_regex.captures(&source)
+}
+
+fn evaluate(source: &String, captures: Captures<'_>, environment: Option<&HashMap<String, String>>) -> Result<String, String> {
     let mut text = source;
 
-    let mut blocks = Vec::<Block>::new();
     let lua = Lua::new();
 
-    for _ in 0..captures.len() / 2 {
-        let (_, [expression]) = captures[0].extract();
-        let start = captures[0].get_match().start();
-        let end = captures[1].get_match().end();
-
-        let data_beginning = captures[0].get_match().end();
-        let data_end = captures[1].get_match().start();
-
-        blocks.push(Block {
-            expression: expression.to_string(),
-            start,
-            end,
-            data: text[data_beginning..data_end].to_string(),
-        });
-    }
-
-    if let Some(ref e) = enviornment {
+    if let Some(e) = environment {
         for (key, value) in e.into_iter() {
             lua.globals().set(key.to_string(), value.to_string()).unwrap();
         }
     }
 
-    for block in blocks {
-        lua.globals().set("data", block.data).unwrap();
-        lua.load(block.expression).exec().unwrap();
+    lua.globals().set("data", block.data).unwrap();
+    lua.load(block.expression).exec().unwrap();
 
-        let data: String = lua.globals().get("data").unwrap();
+    let data: String = lua.globals().get("data").unwrap();
 
-        let mut left = text[0..block.start].to_string().to_owned();
-        let right = &text[block.end..text.len()];
+    let mut left = text[0..block.start].to_string().to_owned();
+    let right = &text[block.end..text.len()];
 
-        left.push_str(&data);
-        left.push_str(right);
+    left.push_str(&data);
+    left.push_str(right);
 
-        text = left;
-    }
+    text = left;
 
     Ok(text)
 }
