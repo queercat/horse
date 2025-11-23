@@ -1,0 +1,6 @@
+use rocket::response::content::RawHtml;
+
+#[get("/$route_path")]
+pub async fn $route() -> RawHtml<String> {
+    todo!()
+}

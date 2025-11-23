@@ -5,6 +5,7 @@ mod database;
 mod models;
 mod services;
 mod utilities;
+mod routes;
 
 use std::sync::Arc;
 
@@ -16,24 +17,9 @@ use rshtml::traits::RsHtml;
 
 use crate::database::setup::set_up_db;
 use crate::models::pages::{HomePage, LoginPage, RegistrationPage};
+use crate::routes::get_routes;
 use crate::services::user_service::UserService;
 use crate::utilities::page::{Render, render};
-
-#[get("/")]
-async fn index(user_service: &State<UserService>) -> RawHtml<String> {
-    let result = user_service.get_users().await;
-
-    let mut page = HomePage {
-        error: "".to_string(),
-        title: if result.is_ok() {
-            "ok".to_string()
-        } else {
-            "not ok".to_string()
-        },
-    };
-
-    RawHtml(page.render().unwrap())
-}
 
 #[get("/register")]
 async fn register() -> RawHtml<String> {
@@ -100,6 +86,6 @@ async fn rocket() -> _ {
 
     rocket::build()
         .manage(user_service)
-        .mount("/", routes![index, register, handle_register, login, handle_login])
+        .mount("/", get_routes())
         .mount("/", FileServer::from("./public"))
 }

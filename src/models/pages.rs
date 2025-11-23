@@ -7,11 +7,6 @@ pub struct HomePage {
 }
 
 #[derive(RsHtml)]
-pub struct IndexPage {
-    pub error: String
-}
-
-#[derive(RsHtml)]
 pub struct RegistrationPage {
     pub error: String
 }
