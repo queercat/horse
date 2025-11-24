@@ -47,8 +47,9 @@ pub fn render(
                         }
 
                         lua.globals().set("data", html).unwrap();
-                        lua.load("function maybe(v, o) return v or \"\" end").exec().expect("Invalid Lua expression.");
+                        lua.load("function maybe(v, o) return v or o end").exec().expect("Invalid Lua expression.");
                         lua.load("function format(...) data = string.format(data, ...) end").exec().expect("Invalid Lua expression.");
+                        lua.load("function each(k) local template = data; data = ''; for _, post in ipairs(k) do data = data .. template:gsub('%$([a-zA-Z_]+)', post) end end").exec().expect("Invalud Lua expression.");
                         lua.load(e).exec().expect("Invalid Lua expression.");
 
                         let data: String = lua.globals().get("data").unwrap();

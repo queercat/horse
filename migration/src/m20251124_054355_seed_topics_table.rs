@@ -1,4 +1,4 @@
-use sea_orm_migration::{prelude::*, schema::*, sea_orm::Statement};
+use sea_orm_migration::{prelude::*, schema::*};
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
@@ -7,9 +7,9 @@ pub struct Migration;
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         let statement = Query::insert()
-            .into_table("users")
-            .columns(["id", "username", "password"])
-            .values_panic([0.into(), "admin".into(), vec![0].into()])
+            .into_table("topics")
+            .columns(["id", "title", "description"])
+            .values_panic([0.into(), "memes".into(), "this is where the memes are".into()])
             .to_owned();
 
         manager.exec_stmt(statement).await?;
@@ -18,7 +18,7 @@ impl MigrationTrait for Migration {
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        let statement = Query::delete().from_table("users").cond_where(Cond::any().add(Expr::col("id").eq(0))).to_owned();
+        let statement = Query::delete().from_table("topics").cond_where(Cond::any().add(Expr::col("id").eq(0))).to_owned();
 
         manager.exec_stmt(statement).await?;
 
