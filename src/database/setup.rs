@@ -1,6 +1,4 @@
-use sea_orm::{
-    ConnectionTrait, Database, DatabaseConnection, DbBackend, DbErr, Statement,
-};
+use sea_orm::{ConnectionTrait, Database, DatabaseConnection, DbBackend, DbErr, Statement};
 
 pub async fn set_up_db() -> Result<DatabaseConnection, DbErr> {
     let database_url = std::env::var("DATABASE_URL").unwrap();

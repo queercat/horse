@@ -18,7 +18,10 @@ impl MigrationTrait for Migration {
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        let statement = Query::delete().from_table("users").cond_where(Cond::any().add(Expr::col("id").eq(0))).to_owned();
+        let statement = Query::delete()
+            .from_table("users")
+            .cond_where(Cond::any().add(Expr::col("id").eq(0)))
+            .to_owned();
 
         manager.exec_stmt(statement).await?;
 

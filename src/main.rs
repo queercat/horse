@@ -3,9 +3,9 @@ extern crate rocket;
 
 mod database;
 mod models;
+mod routes;
 mod services;
 mod utilities;
-mod routes;
 
 use std::sync::Arc;
 
@@ -30,7 +30,7 @@ async fn handle_register(
 
     let error = match result {
         Ok(_) => "".to_string(),
-        Err(s) => s
+        Err(s) => s,
     };
 
     RawHtml("".to_string())
@@ -41,7 +41,9 @@ async fn handle_login(
     user_service: &State<UserService>,
     login_request: Form<models::requests::LoginRequest<'_>>,
 ) -> RawHtml<String> {
-    let result = user_service.login_user(login_request.username, login_request.password).await;
+    let result = user_service
+        .login_user(login_request.username, login_request.password)
+        .await;
     RawHtml("".to_string())
 }
 

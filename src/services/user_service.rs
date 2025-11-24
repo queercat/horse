@@ -1,17 +1,19 @@
 use std::sync::Arc;
 
-use rocket::{
-    futures::lock::{Mutex, MutexGuard},
-};
+use rocket::futures::lock::{Mutex, MutexGuard};
 use sea_orm::{
-    ActiveModelTrait, ActiveValue::Set, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, prelude::Uuid
+    ActiveModelTrait, ActiveValue::Set, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter,
+    prelude::Uuid,
 };
 
-use crate::{database::entities::users::{self, Entity as User}, utilities::password::{hash_password, verify_password}};
-use crate::database::entities::users::Model as UserModel;
 use crate::database::entities::users::ActiveModel as ActiveUserModel;
+use crate::database::entities::users::Model as UserModel;
+use crate::{
+    database::entities::users::{self, Entity as User},
+    utilities::password::{hash_password, verify_password},
+};
 
-use crate::{services::service_trait::RequiresDatabase};
+use crate::services::service_trait::RequiresDatabase;
 
 pub struct UserService {
     db: Arc<Mutex<DatabaseConnection>>,
@@ -23,7 +25,7 @@ impl RequiresDatabase for UserService {
     }
 }
 
-impl UserService  {
+impl UserService {
     pub fn new(db: Arc<Mutex<DatabaseConnection>>) -> Self {
         Self { db }
     }
@@ -50,12 +52,16 @@ impl UserService  {
     pub async fn login_user(&self, username: &str, password: &str) -> bool {
         let db = self.acquire_db().await.clone();
 
-        let user = match User::find().filter(users::Column::Username.eq(username)).one(&db).await {
+        let user = match User::find()
+            .filter(users::Column::Username.eq(username))
+            .one(&db)
+            .await
+        {
             Ok(r) => match r {
                 Some(u) => u,
-                _ => return false
+                _ => return false,
             },
-            _ => return false
+            _ => return false,
         };
 
         verify_password(password.to_string(), user.password)
