@@ -1,21 +1,32 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 use lol_html::{HtmlRewriter, Settings, element, html_content::Element};
-use mlua::Lua;
+use mlua::{Lua, LuaSerdeExt};
+use erased_serde::{Serialize};
+use rocket::futures::lock::Mutex;
 
 pub trait Render {
-    fn render(&mut self, environment: Option<&HashMap<String, String>>) -> Result<String, String>;
+    async fn render(&mut self, environment: &Vec<(String, Box<Mutex<dyn Serialize>>)>) -> Result<String, String>;
 }
 
 impl Render for String {
-    fn render(&mut self, environment: Option<&HashMap<String, String>>) -> Result<String, String> {
-        render(self.to_owned(), environment)
+    async fn render(&mut self, environment: &Vec<(String, Box<Mutex<dyn Serialize>>)>) -> Result<String, String> {
+        let lua = Lua::new();
+        let mut env = vec![];
+
+        for (k, v) in environment {
+            let z = v.to_owned().lock().await;
+            let value = lua.to_value(&z).unwrap();
+            env.push((k.to_owned(), value));
+        };
+
+        render(self, env)
     }
 }
 
 pub fn render(
-    template: String,
-    environment: Option<&HashMap<String, String>>,
+    template: &String,
+    environment: Vec<(String, mlua::Value)>
 ) -> Result<String, String> {
     let mut buffer = vec![];
     let mut rewriter = HtmlRewriter::new(
@@ -26,10 +37,7 @@ pub fn render(
                 el.remove();
                 if let Some(handlers) = el.end_tag_handlers() {
                     let source = template.clone();
-                    let env = match environment {
-                        Some(v) => Some(v.clone()),
-                        None => None,
-                    };
+                    let env = environment.clone();
                     let e = expression.clone();
 
                     handlers.push(Box::new(move |end| {
@@ -38,19 +46,17 @@ pub fn render(
 
                         let lua = Lua::new();
 
-                        if let Some(e) = env {
-                            for (key, value) in e.into_iter() {
-                                lua.globals()
-                                    .set(key.to_string(), value.to_string())
-                                    .expect("Unable to assign globals.")
-                            }
+                        for (k, v) in env {
+                            lua.globals()
+                                .set(k, v)
+                                .expect("Unable to assign globals.")
                         }
 
                         lua.globals().set("data", html).unwrap();
                         lua.load("function maybe(v, o) return v or o end").exec().expect("Invalid Lua expression.");
                         lua.load("function format(...) data = string.format(data, ...) end").exec().expect("Invalid Lua expression.");
                         lua.load("function each(k) local template = data; data = ''; for _, post in ipairs(k) do data = data .. template:gsub('%$([a-zA-Z_]+)', post) end end").exec().expect("Invalud Lua expression.");
-                        lua.load(e).exec().expect("Invalid Lua expression.");
+                        lua.load(&e).exec().expect(format!("Invalid Lua expression. {}", e).as_str());
 
                         let data: String = lua.globals().get("data").unwrap();
 

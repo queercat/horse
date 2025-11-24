@@ -10,10 +10,12 @@ members = [".", "migration"]
 argon2 = "0.5.3"
 dotenv = "0.15.0"
 lol_html = "2.7.0"
-mlua = { version = "0.11.4", features = ["lua54", "vendored"] }
+mlua = { version = "0.11.4", features = ["lua54", "vendored", "serde"] }
 regex = "1.12.2"
 rocket = "0.5.1"
 sea-orm = { version = "2.0.0-rc", features = [ "sqlx-sqlite", "runtime-tokio-native-tls", "macros", "with-uuid" ] }
+serde = "1.0.228"
+erased-serde = "0.4"
 
 [dependencies.uuid]
 version = "1.18.1"
