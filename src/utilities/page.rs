@@ -47,6 +47,8 @@ pub fn render(
                         }
 
                         lua.globals().set("data", html).unwrap();
+                        lua.load("function maybe(v, o) return v or \"\" end").exec().expect("Invalid Lua expression.");
+                        lua.load("function format(...) data = string.format(data, ...) end").exec().expect("Invalid Lua expression.");
                         lua.load(e).exec().expect("Invalid Lua expression.");
 
                         let data: String = lua.globals().get("data").unwrap();

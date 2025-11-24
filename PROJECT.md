@@ -1,6 +1,6 @@
 # TODO
+- [x] Idiomatic conditional rendering. 
 - [ ] JWT based authentication.
-- [ ] Idiomatic conditional rendering. 
 - [ ] Disable / enable registration.
 - [ ] Token only registration.
 - [ ] Database backed CMS topic / sections.
