@@ -1,8 +1,8 @@
 use crate::utilities::page::TemplateEngine;
 use rocket::{response::content::RawHtml};
 
-#[get("/$route_path")]
-pub async fn $route() -> RawHtml<String> {
+#[get("/register")]
+pub async fn register() -> RawHtml<String> {
     let mut template_engine = TemplateEngine::default();
-    RawHtml(template_engine.render("$route").unwrap())
+    RawHtml(template_engine.render("register").unwrap())
 }

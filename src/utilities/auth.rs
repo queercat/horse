@@ -59,7 +59,7 @@ pub fn create_jwt(id: i64) -> anyhow::Result<String> {
     let secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set.");
 
     let expiration = Utc::now()
-        .checked_add_signed(chrono::Duration::seconds(60))
+        .checked_add_signed(chrono::Duration::hours(24))
         .expect("Invalid timestamp")
         .timestamp();
 

@@ -1,21 +1,78 @@
-use std::sync::Mutex;
+use std::{
+    fmt::Display,
+    fs,
+    path::{Path, PathBuf},
+    sync::Mutex,
+};
 
 use erased_serde::Serialize;
 use lol_html::{HtmlRewriter, Settings, element, html_content::Element};
 use mlua::{Lua, LuaSerdeExt};
 
+pub struct TemplateEngine {
+    base_path: PathBuf,
+    layout_path: PathBuf,
+    use_layout: bool,
+    environment: Vec<(String, Mutex<Box<dyn Serialize + Send>>)>,
+}
+
+impl TemplateEngine {
+    fn get_path_to_template(&self, template_name: &impl AsRef<Path>) -> PathBuf {
+        self.base_path
+            .join(template_name.as_ref().with_extension("template.html"))
+            .to_path_buf()
+    }
+
+    pub fn render(&mut self, template_name: impl AsRef<Path>) -> anyhow::Result<String> {
+        let path = self.get_path_to_template(&template_name);
+        let mut template = fs::read_to_string(path)?;
+        let mut rendered = template.render(&self.environment)?;
+
+        if self.use_layout {
+            self.set("children", rendered);
+            template = fs::read_to_string(self.get_path_to_template(&"layout"))?;
+            rendered = template.render(&self.environment)?;
+            self.delete("children");
+        }
+
+        Ok(rendered)
+    }
+
+    pub fn set<K: Display, T: Serialize + Send + 'static>(&mut self, key: K, value: T) {
+        self.environment
+            .push((key.to_string(), Mutex::new(Box::new(value))));
+    }
+
+    pub fn delete<K: Display>(&mut self, key: K) {
+        let key = key.to_string();
+
+        self.environment.retain(|(k, _)| &key != k);
+    }
+}
+
+impl Default for TemplateEngine {
+    fn default() -> Self {
+        Self {
+            base_path: Path::new(&"./views".to_string()).to_owned(),
+            environment: Vec::new(),
+            use_layout: true,
+            layout_path: Path::new(&"./views/layout.index.html".to_string()).to_owned(),
+        }
+    }
+}
+
 pub trait Render {
     fn render(
-        &mut self,
+        &self,
         environment: &Vec<(String, Mutex<Box<dyn Serialize + Send>>)>,
-    ) -> Result<String, String>;
+    ) -> anyhow::Result<String>;
 }
 
 impl Render for String {
     fn render(
-        &mut self,
+        &self,
         environment: &Vec<(String, Mutex<Box<dyn Serialize + Send>>)>,
-    ) -> Result<String, String> {
+    ) -> anyhow::Result<String> {
         let mut env = vec![];
         let lua = Lua::new();
 
@@ -43,7 +100,7 @@ impl Render for String {
     }
 }
 
-pub fn render(template: &String, lua: Lua) -> Result<String, String> {
+pub fn render(template: &String, lua: Lua) -> anyhow::Result<String> {
     let mut buffer = vec![];
     let mut rewriter = HtmlRewriter::new(
         Settings {

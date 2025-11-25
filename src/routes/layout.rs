@@ -1,21 +1,8 @@
-use crate::utilities::page::Render;
-use erased_serde::Serialize;
-use rocket::response::content::RawHtml;
-use std::sync::Mutex;
-
+use crate::utilities::page::TemplateEngine;
+use rocket::{response::content::RawHtml};
 
 #[get("/layout")]
 pub async fn layout() -> RawHtml<String> {
-    let mut environment = Vec::<(String, Mutex<Box<dyn Serialize + Send>>)>::new();
-
-    let mut page_template = include_str!("../../views/index.template.html").to_string();
-    let page = page_template.render(&environment).unwrap();
-
-    environment.push(("children".to_string(), Mutex::new(Box::new(page))));
-
-    let mut layout_template = include_str!("../../views/layout.template.html").to_string();
-    let mut layout = layout_template.render(&environment).unwrap();
-
-    RawHtml(layout.render(&environment).unwrap())
+    let mut template_engine = TemplateEngine::default();
+    RawHtml(template_engine.render("layout").unwrap())
 }
-
