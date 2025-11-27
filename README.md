@@ -1,5 +1,5 @@
 # 🐴🦀
-This is a WIP forum that doesn't use any JavaScript! And it shouldn't suck either. It uses SSR templates powered by rshtml.
+This is a WIP forum that doesn't use any JavaScript! And it shouldn't suck either. It uses a custom templating engine (LAWL) that dynamically rewrites Lua expression embedded in HTML.
 
 # Goals
 - Should be lightweight and fast.
