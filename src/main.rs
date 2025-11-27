@@ -20,6 +20,11 @@ use crate::routes::get_routes;
 use crate::services::topic_service::TopicService;
 use crate::services::user_service::UserService;
 
+#[get("/post/<id>")]
+async fn get_post(id: i64) -> RawHtml<String> {
+    RawHtml(format!("{}", id).to_string())
+}
+
 #[post("/register", data = "<registration_request>")]
 async fn handle_register(
     user_service: &State<UserService>,
@@ -67,6 +72,6 @@ async fn rocket() -> _ {
         .manage(user_service)
         .manage(post_service)
         .mount("/", get_routes())
-        .mount("/", routes![handle_login, handle_register])
+        .mount("/", routes![handle_login, handle_register, get_post])
         .mount("/", FileServer::from("./public"))
 }
